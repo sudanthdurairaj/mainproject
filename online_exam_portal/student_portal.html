@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - Online Exam</title>
+    <link rel="stylesheet" href="student.css">
+</head>
+<body>
+    <div class="student-container">
+        <header class="student-header">
+            <h1>Welcome to Your Exam</h1>
+            <p class="instructions">Please answer the following questions based on the syllabus provided by your instructor.</p>
+        </header>
+        <form id="examForm" class="exam-form">
+            <div id="questions-container" class="questions-container"></div>
+            <div class="submit-btn-container">
+                <button type="submit" class="submit-btn">Submit Exam</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Fetch exam questions from the backend
+        fetch('get_questions.php')
+            .then(response => response.json())
+            .then(data => {
+                const questionsContainer = document.getElementById('questions-container');
+                data.questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.classList.add('question');
+                    questionDiv.innerHTML = `
+                        <p class="question-text">${index + 1}. ${question.question}</p>
+                        <input type="text" name="answer-${index}" class="answer-input" placeholder="Your answer">
+                    `;
+                    questionsContainer.appendChild(questionDiv);
+                });
+            })
+            .catch(error => console.error('Error fetching questions:', error));
+
+        // Handle form submission
+        document.getElementById('examForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const answers = [];
+            const formData = new FormData(this);
+            formData.forEach((value, key) => {
+                answers.push({ questionId: key, answer: value });
+            });
+
+            // Submit answers to the backend for evaluation
+            fetch('submit_exam.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Your result: ' + data.result);
+            })
+            .catch(error => console.error('Error submitting exam:', error));
+        });
+    </script>
+</body>
+</html>
